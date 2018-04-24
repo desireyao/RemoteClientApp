@@ -14,23 +14,24 @@ import java.util.List;
 
 public class PicUtil {
 
+    private static final int SLICEX = 8;
+    private static final int SLICEY = 8;
+
     /**
      * 切割图片
      *
      * @param bitmap
-     * @param sliceX
-     * @param sliceY
      * @return
      */
-    public static List<SliceModel> splitBitmap(Bitmap bitmap, int sliceX, int sliceY) {
+    public static List<SliceModel> splitBitmap(Bitmap bitmap) {
         List<SliceModel> sliceModelList = new ArrayList<>();
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        int sliceW = width / sliceX;
-        int sliceH = height / sliceY;
+        int sliceW = width / SLICEX;
+        int sliceH = height / SLICEY;
 
-        for (int i = 0; i < sliceX; i++) {
-            for (int j = 0; j < sliceY; j++) {
+        for (int i = 0; i < SLICEX; i++) {
+            for (int j = 0; j < SLICEY; j++) {
                 int x = i * sliceW;
                 int y = j * sliceH;
                 Bitmap sliceBitmap = Bitmap.createBitmap(bitmap, x, y, sliceW, sliceH);
@@ -45,6 +46,7 @@ public class PicUtil {
 
     /**
      * bitmap 转jpg 二进制数据
+     *
      * @param bm
      * @return
      */

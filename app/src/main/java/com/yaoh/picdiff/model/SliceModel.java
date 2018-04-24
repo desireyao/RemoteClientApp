@@ -43,9 +43,7 @@ public class SliceModel {
 
     @Override
     public String toString() {
-        return "SliceModel{" +
-                "x=" + x +
-                ", y=" + y +
-                '}';
+        return "\n {" + " x = " + x
+                      + " y = " + y + '}';
     }
 }

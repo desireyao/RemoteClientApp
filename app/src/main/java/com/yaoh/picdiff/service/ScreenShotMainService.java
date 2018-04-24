@@ -2,32 +2,40 @@ package com.yaoh.picdiff.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.vilyever.socketclient.SocketClient;
-import com.vilyever.socketclient.helper.SocketClientDelegate;
-import com.vilyever.socketclient.helper.SocketHeartBeatHelper;
-import com.vilyever.socketclient.helper.SocketResponsePacket;
-import com.vilyever.socketclient.util.CharsetUtil;
-import com.yaoh.picdiff.enums.EnumNotifyType;
+import com.yaoh.picdiff.listeners.ShotScreenBitmapListener;
+import com.yaoh.picdiff.listeners.ShotScreenPicDiffListener;
+import com.yaoh.picdiff.model.SliceModel;
+import com.yaoh.picdiff.screenshot.PixelDiffManager;
 import com.yaoh.picdiff.screenshot.ScreenShotActivity;
+import com.yaoh.picdiff.socket.SocketClientManager;
+import com.yaoh.picdiff.socket.SocketListener;
 import com.yaoh.picdiff.tools.LogTool;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
+import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * Created by yaoh on 2018/4/6.
  */
 
-public class ScreenShotMainService extends Service {
+public class ScreenShotMainService extends Service implements ShotScreenBitmapListener, ShotScreenPicDiffListener ,SocketListener{
 
     private static final String TAG = "ScreenShotMainService";
-    private SocketClient socketClient;
+    private PixelDiffManager pixelDiffManager;
+
+    private Handler mHandler = new Handler();
+
+    private  SocketClientManager mSocketClientManager;
 
     @Nullable
     @Override
@@ -35,7 +43,27 @@ public class ScreenShotMainService extends Service {
         return new ServiceBinder(this);
     }
 
+    @Override
+    public void onSocketConnected() {
+        LogTool.LogE_DEBUG(TAG,"onSocketConnected--->");
+        //
+        mSocketClientManager.sendData("*109\\n0#1#1#123");
+
+    }
+
+    @Override
+    public void onSocketDisConnected() {
+        LogTool.LogE_DEBUG(TAG,"onSocketDisConnected--->");
+    }
+
+    @Override
+    public void onSocketResponse(String msg) {
+        LogTool.LogE_DEBUG(TAG,"onSocketResponse--->msg = " + msg);
+    }
+
+
     public class ServiceBinder extends Binder {
+
         private ScreenShotMainService service;
 
         protected ServiceBinder(ScreenShotMainService service) {
@@ -50,57 +78,63 @@ public class ScreenShotMainService extends Service {
     @Override
     public void onCreate() {
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onCreate--->");
-        EventBus.getDefault().post(EnumNotifyType.SERVICE_ON_CREATE);
+        pixelDiffManager = new PixelDiffManager(this);
+//        startScreenShot();
+
+          connectSocket();
+//        EventBus.getDefault().register(this);
+//        EventBus.getDefault().post(EnumNotifyType.SERVICE_ON_CREATE);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onDestroy ----->");
+
+//        EventBus.getDefault().unregister(this);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onStartCommand--->");
-
-        EventBus.getDefault().post(EnumNotifyType.SERVICE_ON_START);
+//        EventBus.getDefault().post(EnumNotifyType.SERVICE_ON_START);
         return START_STICKY;
     }
 
-    public void startScreenShot(final int picIndex) {
-        Handler mHandler = new Handler();
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(ScreenShotMainService.this, ScreenShotActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra("picIndex", picIndex);
-                startActivity(intent);
-            }
-        }, 1000);
+    public void startScreenShot() {
+        Intent intent = new Intent(this, ScreenShotActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
-    // 开始 socket 连接
-    private void startConnectSockrt() {
-        socketClient = new SocketClient();
-        socketClient.getAddress().setRemoteIP("120.79.248.218"); // 远程端IP地址
-        socketClient.getAddress().setRemotePort("6000"); // 远程端端口号
-        socketClient.getAddress().setConnectionTimeout(10 * 1000); // 连接超时时长，单位毫秒
-//        socketClient.setHeartBeatHelper(new SocketHeartBeatHelper().);
-        socketClient.setCharsetName(CharsetUtil.UTF_8); // 设置编码为UTF-8
+    /**
+     * 连接socket
+     */
+    private void connectSocket() {
+        mSocketClientManager = new SocketClientManager();
+        mSocketClientManager.startConnect(this);
 
-        socketClient.removeSocketClientDelegate(new SocketClientDelegate() {
-
-            @Override
-            public void onConnected(SocketClient client) {
-                LogTool.LogE_DEBUG(TAG, "onConnected--->");
-            }
-
-            @Override
-            public void onDisconnected(SocketClient client) {
-                LogTool.LogE_DEBUG(TAG, "onDisconnected--->");
-            }
-
-            @Override
-            public void onResponse(SocketClient client, @NonNull SocketResponsePacket responsePacket) {
-                LogTool.LogE_DEBUG(TAG, "onResponse--->");
-            }
-        });
-
-        socketClient.connect();
     }
+
+    @Override
+    public void onShotScreenBitmap(boolean isSucceed, Bitmap bitmap) {
+
+        if (isSucceed) {
+            pixelDiffManager.calPicDiffPart(bitmap);
+        } else {
+            startScreenShot();
+        }
+
+    }
+
+    @Override
+    public void onShotScreenPicDiff(boolean isSucceed, List<SliceModel> dataList) {
+
+        LogTool.LogE_DEBUG(TAG, "onShotScreenPicDiff ---> isSucceed = " + isSucceed
+                + " SIZE = " + dataList.size()
+                + " dataList = " + dataList.toString());
+
+        startScreenShot();
+    }
+
 }

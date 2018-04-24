@@ -1,14 +1,14 @@
 package com.yaoh.picdiff.screenshot;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
-import com.yaoh.picdiff.model.PixelPointModel;
+import com.yaoh.picdiff.listeners.ShotScreenPicDiffListener;
+import com.yaoh.picdiff.model.SliceModel;
 import com.yaoh.picdiff.tools.LogTool;
+import com.yaoh.picdiff.utils.PicUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import static com.yaoh.picdiff.Constants.BASE_DIR_PATH;
 
 /**
  * Created by yaoh on 2018/4/5.
@@ -17,69 +17,79 @@ import static com.yaoh.picdiff.Constants.BASE_DIR_PATH;
 public class PixelDiffManager {
 
     private static final String TAG = "TAG";
-    private List<PixelPointModel> pixelPoints = new ArrayList<>();
 
-    public void readPixels(DiffPicListener listener) {
+    // 上一次的记录
+    private List<SliceModel> mSlicesLast = new ArrayList<>();
+
+    // 返回有差异的图片
+    private List<SliceModel> mSlicesDiff = new ArrayList<>();
+
+    private ShotScreenPicDiffListener mListener;
+
+    public PixelDiffManager(ShotScreenPicDiffListener listener) {
         mListener = listener;
-        new Thread(new DiffPicTask()).start();
+    }
+
+    public void calPicDiffPart(Bitmap bitmap) {
+        new Thread(new DiffPicTask(bitmap)).start();
     }
 
     class DiffPicTask implements Runnable {
 
+        private Bitmap mBitmap;
+
+        public DiffPicTask(Bitmap mBitmap) {
+            this.mBitmap = mBitmap;
+        }
+
         @Override
         public void run() {
             LogTool.LogE_DEBUG(TAG, "TASK BEGIN--->");
-            Long startTime = System.currentTimeMillis();
-            // 图片1
-            Bitmap  mBitmap1 = BitmapFactory.decodeFile(BASE_DIR_PATH + "/pic1.png");
+//            mSlicesDiff.clear();
 
-            //  图片2
-            Bitmap  mBitmap2 = BitmapFactory.decodeFile(BASE_DIR_PATH + "/pic2.png");
-            LogTool.LogE_DEBUG(TAG, "TASK decodeFile time --->" + (System.currentTimeMillis() - startTime) + " ms");
+            if (mSlicesLast.isEmpty()) {
+                mSlicesLast = PicUtil.splitBitmap(mBitmap);
+                mListener.onShotScreenPicDiff(true, mSlicesLast);
+                return;
+            }
 
-            int mImgWidth = mBitmap1.getWidth();
-            int mImgHeight = mBitmap1.getHeight();
-            LogTool.LogE_DEBUG(TAG, "图片的大小 width = " + mImgWidth + "  height = " + mImgHeight);
+            List<SliceModel> mSlicesCur = PicUtil.splitBitmap(mBitmap);
+            if (mSlicesCur.size() != mSlicesLast.size()) {
+                mListener.onShotScreenPicDiff(false, mSlicesDiff);
+                return;
+            }
 
-            int[] pixels1 = new int[mImgWidth * mImgHeight];
-            int[] pixels2 = new int[mImgWidth * mImgHeight];
-            mBitmap1.getPixels(pixels1, 0, mImgWidth, 0, 0, mImgWidth, mImgHeight);
-            mBitmap2.getPixels(pixels2, 0, mImgWidth, 0, 0, mImgWidth, mImgHeight);
-            mBitmap1.recycle();
-            mBitmap2.recycle();
-            LogTool.LogE_DEBUG(TAG, "TASK getPixels time --->" + (System.currentTimeMillis() - startTime) +  " ms");
+            mSlicesDiff.clear();
+            for (int i = 0; i < mSlicesCur.size(); i++) {
+                Bitmap mPartBitmap1 = mSlicesLast.get(i).getBitmap();
+                Bitmap mPartBitmap2 = mSlicesCur.get(i).getBitmap();
 
-            pixelPoints.clear();
-            for (int i = 0; i < pixels1.length; i++) {
-                if (pixels1[i] != pixels2[i]) {
-                    PixelPointModel point = new PixelPointModel();
-                    int x = i % mImgWidth;
-                    int y = i / mImgWidth;
-                    point.setX(x);
-                    point.setY(y);
-                    point.setColor(pixels1[i]);
-                    pixelPoints.add(point);
+                int mPartWidth = mPartBitmap1.getWidth();
+                int mPartHeight = mPartBitmap1.getHeight();
+
+                int[] pixels1 = new int[mPartWidth * mPartHeight];
+                int[] pixels2 = new int[mPartWidth * mPartHeight];
+                mPartBitmap1.getPixels(pixels1, 0, mPartWidth, 0, 0, mPartWidth, mPartHeight);
+                mPartBitmap2.getPixels(pixels2, 0, mPartWidth, 0, 0, mPartWidth, mPartHeight);
+
+                for (int j = 0; j < pixels1.length; j++) {
+                    if (pixels1[i] != pixels2[i]) {
+                        mSlicesDiff.add(mSlicesCur.get(i));
+                        break;
+                    }
                 }
             }
 
-            long diffTime = (System.currentTimeMillis() - startTime);
-            LogTool.LogE_DEBUG(TAG, "TASK END---> TIME = "
-                    +  diffTime + " ms"
-                    + " pixelPoints.size() = " + pixelPoints.size());
-
-            if(mListener != null){
-                mListener.onDiffPic("耗时: " + diffTime + " ms"
-                        + " \t 差异的像素个数: " + pixelPoints.size());
+            if (mListener != null && mSlicesDiff.size() != 0) {
+                mListener.onShotScreenPicDiff(true, mSlicesDiff);
+                // 将新的保存到上一帧
+                mSlicesLast = mSlicesCur;
+            } else {
+                mListener.onShotScreenPicDiff(false, mSlicesDiff);
             }
 
-//            LogTool.LogE_DEBUG(TAG, " \n pixelPoints = " + pixelPoints.toString());
+            LogTool.LogE_DEBUG(TAG, "TASK END--->");
         }
-    }
-
-    private DiffPicListener mListener;
-
-    public interface DiffPicListener{
-        public void onDiffPic(String msg);
     }
 
 }
