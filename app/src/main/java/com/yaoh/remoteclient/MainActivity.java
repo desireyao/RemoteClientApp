@@ -104,41 +104,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
         int id = v.getId();
         if (id == R.id.btn_startScreenShot) {
 //            pixelDiffManager.readPixels(this);
-//            ImageView img1 = findViewById(R.id.img1);
-//            ImageView img2 = findViewById(R.id.img2);
-//            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.img_desktop);
-//            List<SliceModel> sliceModelList = BitmapUtil.splitBitmap(bitmap, 10, 10);
-//            LogTool.LogE_DEBUG(TAG, "sliceModelList SIZE: " + sliceModelList.size());
-//
-//            img1.setImageBitmap(sliceModelList.get(0).getBitmap());
-//            img2.setImageBitmap(sliceModelList.get(1).getBitmap());
 
             EventBus.getDefault().post(0);
-
-//            mHandler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-////                    ShellUtil.execShellCmd("getevent -p");
-////                    ShellUtil.execShellCmd("sendevent /dev/input/event1 1 158 1");
-////                    ShellUtil.execShellCmd("sendevent /dev/input/event1 1 158 0");
-////                    ShellUtil.execShellCmd("input keyevent 3");//home
-////                    ShellUtil.execShellCmd("input tap 660 839");
-//                }
-//            }, 2000);
 
         } else if (id == R.id.btn_socketConnect) {
             startService(new Intent(this, ScreenShotMainService.class));
             finish();
 
-//            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.pic);
-//            byte[] bytes = BitmapUtil.bitmap2JPGBytes(bitmap);
-//            BitmapUtil.bitmapSave(bytes); // 保存到本地
-
-//            LogTool.LogSave(TAG, LogTool.LogBytes2Hex(dataArray, "dataArray"));
-//
-//            Bitmap bitmap1 = BitmapFactory.decodeByteArray(dataArray,0,dataArray.length);
-//            ImageView img = findViewById(R.id.img);
-//            img.setImageBitmap(bitmap);
         } else if (id == R.id.btn_closeConnect) {
             EventBus.getDefault().post(new SocketCmd(SocketCmd.CMD_TYPE.CMD_DEVICE_DISCONNECT, null));
         }
