@@ -7,13 +7,26 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingTop="16dp"
-    tools:context="com.yaoh.picdiff.MainActivity">
+    tools:context="com.yaoh.remoteclient.MainActivity">
+
+
+    <Button
+        android:id="@+id/btn_socketConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="开始连接" />
+
+    <Button
+        android:id="@+id/btn_closeConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="关闭连接" />
 
     <Button
         android:id="@+id/btn_startScreenShot"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="开始截图 应用将会退出在后台运行" />
+        android:text="开始截图" />
 
     <TextView
         android:id="@+id/tv_content"
@@ -21,6 +34,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="content: " />
+
+
+       <ImageView
+           android:id="@+id/img"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content" />
 
 
 </LinearLayout>

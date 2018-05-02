@@ -2,19 +2,33 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
+
     defaultConfig {
-        applicationId "com.yaoh.picdiff"
+        applicationId "com.yaoh.remoteclient"
         minSdkVersion 21
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    flavorDimensions "RemoteClientApp"
+    productFlavors {
+
+        RemoteClientApp {
+            applicationId "com.yaoh.remoteclient"
+            versionCode 1
+            versionName "1.0.0"
+            buildConfigField('String', 'SOCKET_IP', "\"${SOCKET_IP}\"")
+            buildConfigField('int', 'SOCKET_PORT', "${SOCKET_PORT}")
+            dimension "RemoteClientApp"
+        }
+
     }
 }
 
