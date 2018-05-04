@@ -9,17 +9,10 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.view.Window;
 
-import com.yaoh.remoteclient.tools.LogTool;
-
 import org.greenrobot.eventbus.EventBus;
 
-
-/**
- * Created by wei on 16-9-18.
- * <p>
- * 完全透明 只是用于弹出权限申请的窗而已
- */
 public class ScreenShotActivity extends Activity {
+
     private static final String TAG = "ScreenShotActivity";
 
     public static final int REQUEST_MEDIA_PROJECTION = 1001;
@@ -46,14 +39,12 @@ public class ScreenShotActivity extends Activity {
 
 
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        LogTool.LogE_DEBUG(TAG, "onActivityResult--->requestCode = " + requestCode
-                + " resultCode = " + resultCode);
+//        LogTool.LogE_DEBUG(TAG, "onActivityResult--->requestCode = " + requestCode
+//                + " resultCode = " + resultCode);
 
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             EventBus.getDefault().post(data);
-
             finish();
         }
     }
-
 }

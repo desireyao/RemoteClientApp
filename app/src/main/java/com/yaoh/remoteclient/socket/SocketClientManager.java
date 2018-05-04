@@ -28,6 +28,7 @@ public abstract class SocketClientManager {
     public enum Status {
         STATUS_DISCONNECTED,
         STATUS_CONNECTED,
+        STATUS_SCREEN_SHOTTING
     }
 
     private Status mStatus = Status.STATUS_DISCONNECTED;
@@ -52,6 +53,10 @@ public abstract class SocketClientManager {
 
     public Status getStatus() {
         return mStatus;
+    }
+
+    public void setStatus(Status mStatus) {
+        this.mStatus = mStatus;
     }
 
     /**
@@ -93,7 +98,8 @@ public abstract class SocketClientManager {
      * @param data byte[]
      */
     public boolean sendData(byte[] data) {
-        LogTool.LogE_DEBUG(TAG, LogTool.LogBytes2Hex(data, "sendData"));
+//        LogTool.LogE_DEBUG(TAG, "sendData length = " + data.length);
+//        LogTool.LogE_DEBUG(TAG, LogTool.LogBytes2Hex(data, "sendData"));
         try {
             if (dataOutputStream != null) {
                 dataOutputStream.write(data);
@@ -117,8 +123,9 @@ public abstract class SocketClientManager {
      * 关闭 socket
      */
     public void close() {
-        if (mStatus == Status.STATUS_CONNECTED && mSocket != null) {
+        if (mSocket != null) {
             try {
+                mStatus = Status.STATUS_DISCONNECTED;
                 mSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -164,7 +171,7 @@ public abstract class SocketClientManager {
                     int rcvLen = inputStream.read(buffer);
                     if (rcvLen == -1) {
                         LogTool.LogD(TAG, " rcvLen ---> " + rcvLen);
-                        continue;
+                        break;
                     }
 
                     byte[] recvData = new byte[rcvLen];
@@ -194,11 +201,13 @@ public abstract class SocketClientManager {
             }
 
             try {
+                mStatus = Status.STATUS_DISCONNECTED;
                 dataOutputStream.close();
                 inputStream.close();
                 mSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                mStatus = Status.STATUS_DISCONNECTED;
                 LogTool.LogE_DEBUG(TAG, e.toString());
             }
         }

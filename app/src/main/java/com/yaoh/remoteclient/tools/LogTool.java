@@ -20,7 +20,7 @@ public class LogTool {
 
     private static volatile LogTool mInstance;
 
-    private static boolean isShowD = true;
+    private static boolean isShowD = false;
     private static boolean isShowI = true;
     private static boolean isShowE = true;
 

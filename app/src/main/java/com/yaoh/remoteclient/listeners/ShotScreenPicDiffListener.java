@@ -1,8 +1,5 @@
 package com.yaoh.remoteclient.listeners;
 
-import com.yaoh.remoteclient.model.SliceModel;
-
-import java.util.List;
 
 /**
  * Created by yaoh on 2018/4/21.
@@ -10,5 +7,6 @@ import java.util.List;
 
 public interface ShotScreenPicDiffListener {
 
-    public void onShotScreenPicDiff(boolean isSucceed, List<SliceModel> dataList);
+    void onShotScreenPicDiff(boolean isSucceed, byte[] diffData);
+
 }

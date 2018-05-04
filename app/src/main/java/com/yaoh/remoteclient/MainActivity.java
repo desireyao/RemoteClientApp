@@ -24,6 +24,7 @@ import com.yaoh.remoteclient.service.ScreenShotMainService;
 import com.yaoh.remoteclient.socket.SocketCmd;
 import com.yaoh.remoteclient.tools.LogTool;
 import com.yaoh.remoteclient.utils.BitmapUtil;
+import com.yaoh.remoteclient.utils.RootCmd;
 import com.yaoh.remoteclient.utils.ShellUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -104,18 +105,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         int id = v.getId();
         if (id == R.id.btn_startScreenShot) {
 //            pixelDiffManager.readPixels(this);
-
             EventBus.getDefault().post(0);
-
         } else if (id == R.id.btn_socketConnect) {
             startService(new Intent(this, ScreenShotMainService.class));
             finish();
-
         } else if (id == R.id.btn_closeConnect) {
             EventBus.getDefault().post(new SocketCmd(SocketCmd.CMD_TYPE.CMD_DEVICE_DISCONNECT, null));
         }
     }
-
 
     /**
      * service 连接

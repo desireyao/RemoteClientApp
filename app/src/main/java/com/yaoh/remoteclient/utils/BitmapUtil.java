@@ -20,8 +20,8 @@ import java.util.List;
 
 public class BitmapUtil {
 
-    private static final int SLICEX = 8;
-    private static final int SLICEY = 8;
+    private static final int SLICEX = 1;
+    private static final int SLICEY = 16;
 
     /**
      * 切割图片
@@ -49,7 +49,6 @@ public class BitmapUtil {
         return sliceModelList;
     }
 
-
     /**
      * bitmap 转jpg 二进制数据
      *
@@ -71,6 +70,7 @@ public class BitmapUtil {
 
     /**
      * 保存 bitmap 到本地
+     *
      * @param picName
      * @param bytes
      */

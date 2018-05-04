@@ -2,19 +2,31 @@ package com.yaoh.remoteclient.socket;
 
 import android.graphics.Bitmap;
 
+import com.yaoh.remoteclient.listeners.ScreenShotSendDataListener;
 import com.yaoh.remoteclient.model.SliceModel;
 import com.yaoh.remoteclient.tools.LogTool;
 import com.yaoh.remoteclient.utils.BitmapUtil;
 import com.yaoh.remoteclient.utils.ConvertUtils;
 import com.yaoh.remoteclient.utils.ScreenUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Created by yaoh on 2018/4/24.
  */
 
 public class SocketClientDataManager extends SocketClientManager {
+
+    private ScheduledExecutorService mExecutor;
+    private List<SliceModel> mDataList = new ArrayList<>();
+
+    private final String LOCK = "LOCK";
+    private int mCount;
+
+    private ScreenShotSendDataListener mListener;
 
     @Override
     public void sendloginData() {
@@ -40,65 +52,12 @@ public class SocketClientDataManager extends SocketClientManager {
 
 
     /**
-     * 发送截屏数据
-     *
-     * @param dataList
-     * @return
+     * 发送并刷新 差异的截图数据
+     * @param diffData
      */
-    public boolean sendScreenShotData(List<SliceModel> dataList) {
-        for (int i = 0; i < dataList.size(); i++) {
-            SliceModel sliceModel = dataList.get(i);
-            Bitmap bitmap = sliceModel.getBitmap();
-            byte[] bitmapData = BitmapUtil.bitmap2JPGBytes(bitmap);
-//            BitmapUtil.bitmapSave("pic" + i + ".jpg", bitmapData);
-            int bitmapLength = bitmapData.length;
-            LogTool.LogSave(TAG, " bitmapLength = " + bitmapLength
-                    + " bitmapW = " + bitmap.getWidth()
-                    + " bitmapH = " + bitmap.getHeight()
-                    + " X =" + sliceModel.getX()
-                    + " Y =" + sliceModel.getY());
-
-            if (bitmapLength == 0) {
-                return false;
-            }
-
-//            byte x0 = (byte) (sliceModel.getX() & 0xff);
-//            byte x1 = (byte) ((sliceModel.getX() >> 8) & 0xff);
-//            byte y1 = (byte) ((sliceModel.getY() >> 8) & 0xff);
-//            byte y0 = (byte) (sliceModel.getY() & 0xff);
-
-            byte[] xx = ConvertUtils.intToBytes(sliceModel.getX(), 2);
-            byte[] yy = ConvertUtils.intToBytes(sliceModel.getY(), 2);
-            byte x0 = xx[0];
-            byte x1 = xx[1];
-            byte y0 = yy[0];
-            byte y1 = yy[1];
-
-            StringBuffer headerBuffer = new StringBuffer();
-            headerBuffer.append("*")
-                    .append("51")
-                    .append(String.valueOf(bitmapData.length + 4))
-                    .append("\n");
-
-            LogTool.LogSave(TAG, "send picData header = " + headerBuffer.toString()
-                    + LogTool.LogBytes2Hex(xx, " xx")
-                    + LogTool.LogBytes2Hex(xx, " yy"));
-
-            byte[] headerData = headerBuffer.toString().getBytes();
-            byte[] sendData = new byte[headerData.length + bitmapData.length + 4];
-            System.arraycopy(headerData, 0, sendData, 0, headerData.length);
-            sendData[headerData.length] = x0;
-            sendData[headerData.length + 1] = x1;
-            sendData[headerData.length + 2] = y0;
-            sendData[headerData.length + 3] = y1;
-            System.arraycopy(bitmapData, 0, sendData, headerData.length + 4, bitmapData.length);
-
-            sendData(sendData);
-        }
-
-        // 刷新图像数据
+    public void sendRefreshDiffData(byte[] diffData){
+        sendData(diffData);
         sendData("*520\n");
-
-        return true;
     }
+
 }
