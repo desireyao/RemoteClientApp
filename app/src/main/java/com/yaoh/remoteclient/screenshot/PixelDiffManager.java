@@ -47,8 +47,7 @@ public class PixelDiffManager {
     }
 
     public void startDiffPicTask(Bitmap bitmap) {
-        LogTool.LogE_DEBUG(TAG, "startDiffPicTask ------> time = " + System.currentTimeMillis());
-
+//        LogTool.LogE_DEBUG(TAG, "startDiffPicTask ------> time = " + System.currentTimeMillis());
         if (mExcutor == null) {
             mExcutor = new ScheduledThreadPoolExecutor(mCorePoolSize);
         }
@@ -79,7 +78,7 @@ public class PixelDiffManager {
 
         @Override
         public void run() {
-            LogTool.LogE_DEBUG(TAG, "TASK BEGIN111--->time = " + System.currentTimeMillis());
+//            LogTool.LogE_DEBUG(TAG, "TASK BEGIN111--->time = " + System.currentTimeMillis());
             // 把所有的图像数据包括指令 先转List<Byte> 再转byte[]
             mByteDiffDataList.clear();
 
@@ -89,11 +88,10 @@ public class PixelDiffManager {
                 return;
             }
             mSlicesDiff.clear();
-
             mSlicesCur = BitmapUtil.splitBitmap(mBitmap);
 
-            LogTool.LogE_DEBUG(TAG, " mExcutor---> isShutdown = " + mExcutor.isShutdown()
-                    + " TASK BEGIN222--->time = " + System.currentTimeMillis());
+//            LogTool.LogE_DEBUG(TAG, " mExcutor---> isShutdown = " + mExcutor.isShutdown()
+//                    + " TASK BEGIN222--->time = " + System.currentTimeMillis());
 
             for (int i = 0; i < mSlicesCur.size(); i++) {
                 mExcutor.execute(new DiffPicTask(i));
@@ -147,9 +145,9 @@ public class PixelDiffManager {
                         byteDiffData[i] = mByteDiffDataList.get(i);
                     }
 
-                    LogTool.LogE_DEBUG(TAG, "mDiffCount END 222 ---> " + mDiffCount
-                            + " time = " + System.currentTimeMillis()
-                            + " mSlicesDiff.SIZE = " + mSlicesDiff.size());
+//                    LogTool.LogE_DEBUG(TAG, "mDiffCount END 222 ---> " + mDiffCount
+//                            + " time = " + System.currentTimeMillis()
+//                            + " mSlicesDiff.SIZE = " + mSlicesDiff.size());
 
                     if (mListener != null) {
                         mListener.onShotScreenPicDiff(true, byteDiffData);
@@ -177,7 +175,7 @@ public class PixelDiffManager {
         byte[] bitmapData = BitmapUtil.bitmap2JPGBytes(bitmap);
 //            LogTool.LogE_DEBUG(TAG, "sendScreenShotData222333--->" + System.currentTimeMillis());
 
-//        int bitmapLength = bitmapData.length;
+//      int bitmapLength = bitmapData.length;
 //      LogTool.LogSave(TAG, " bitmapLength = " + bitmapLength
 //                    + " bitmapW = " + bitmap.getWidth()
 //                    + " bitmapH = " + bitmap.getHeight()

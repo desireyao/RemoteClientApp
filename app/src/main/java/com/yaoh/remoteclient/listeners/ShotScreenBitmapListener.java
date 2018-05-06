@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
  */
 
 public interface ShotScreenBitmapListener {
-    public void onShotScreenBitmap(boolean isSucced,Bitmap bitmap);
+
+    public void onShotScreenBitmap(Bitmap bitmap);
 
 }

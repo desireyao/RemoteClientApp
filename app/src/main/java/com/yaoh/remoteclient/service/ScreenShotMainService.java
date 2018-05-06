@@ -36,7 +36,6 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     private SocketClientDataManager mSocketClientDataManager;
 
     private PixelDiffManager pixelDiffManager;
-
     private Shotter mShotter;
 
     @Nullable
@@ -93,14 +92,11 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     }
 
     @Override
-    public void onShotScreenBitmap(boolean isSucceed, Bitmap bitmap) {
-        LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->isSucceed = " + isSucceed);
+    public void onShotScreenBitmap(Bitmap bitmap) {
+        LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->");
 
-        if (isSucceed) {
-            pixelDiffManager.startDiffPicTask(bitmap);
-        } else {
-            startScreenShot();  // 失败重新截屏
-        }
+        // 开始比较图片
+        pixelDiffManager.startDiffPicTask(bitmap);
     }
 
     @Override
@@ -109,8 +105,9 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 //        LogTool.LogE_DEBUG(TAG, "onShotScreenPicDiff ---> isSucceed = " + isSucceed
 //                + " size = " + dataList.size()
 //                + " dataList = " + dataList.toString());
-        LogTool.LogE_DEBUG(TAG, "onShotScreenPicDiff---> size = " + diffData.length
-                + " 结束截屏 time = " + System.currentTimeMillis());
+
+//         LogTool.LogE_DEBUG(TAG, "onShotScreenPicDiff---> size = " + diffData.length
+//                + " 结束截屏 time = " + System.currentTimeMillis());
 
 //        if(mSocketClientDataManager.getStatus() == SocketClientManager.Status.STATUS_SCREEN_SHOTTING){
 //            mSocketClientDataManager.sendRefreshDiffData(diffData);
@@ -119,8 +116,9 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 //        }
 
         mSocketClientDataManager.sendRefreshDiffData(diffData);
-        // 重新开始截屏
-        startScreenShot();
+
+        // 发送完数据开始截屏
+//        mShotter.startShotScreen();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -131,9 +129,11 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShotScreenEvent(Intent data) {
-//        LogTool.LogE_DEBUG(TAG, "onShotScreenEvent --->");
-        mShotter = new Shotter(data);
-        mShotter.shotScreenBitmap(this);
+        LogTool.LogE_DEBUG(TAG, "onShotScreenEvent-----------> mShotter = " + (mShotter == null));
+        if (mShotter == null) {
+            mShotter = new Shotter(data, this);
+            mShotter.startShotScreenTask();
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING)

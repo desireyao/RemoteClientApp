@@ -1,7 +1,10 @@
 package com.yaoh.remoteclient.utils;
 
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Arrays;
 
 /**
  * Created by yaoh on 2018/4/26.

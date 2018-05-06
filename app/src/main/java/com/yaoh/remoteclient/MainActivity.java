@@ -1,19 +1,11 @@
 package com.yaoh.remoteclient;
 
 import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,11 +13,9 @@ import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 import com.yaoh.remoteclient.service.ScreenShotMainService;
+import com.yaoh.remoteclient.shell.ShellUtils;
 import com.yaoh.remoteclient.socket.SocketCmd;
 import com.yaoh.remoteclient.tools.LogTool;
-import com.yaoh.remoteclient.utils.BitmapUtil;
-import com.yaoh.remoteclient.utils.RootCmd;
-import com.yaoh.remoteclient.utils.ShellUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -35,7 +25,6 @@ import java.util.List;
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final String TAG = "MainActivity";
-    public static final int REQUEST_MEDIA_PROJECTION = 1001;
 
     private Button btn_socketConnect;
     private Button btn_startScreenShot;
@@ -104,8 +93,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.btn_startScreenShot) {
-//            pixelDiffManager.readPixels(this);
-            EventBus.getDefault().post(0);
+//            EventBus.getDefault().post(0);
+
+            String path = "export CLASSPATH=/sdcard/Main.dex";
+            String app = "exec app_process /sdcard com.main.Main";
+
+            ShellUtils.execCommand(new String[]{path, app}, true);
+
         } else if (id == R.id.btn_socketConnect) {
             startService(new Intent(this, ScreenShotMainService.class));
             finish();
