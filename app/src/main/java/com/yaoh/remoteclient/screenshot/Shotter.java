@@ -36,7 +36,6 @@ public class Shotter {
     private MediaProjection mMediaProjection;
 
     private ScheduledExecutorService mExecutor;
-    private boolean isStartShotScreen;
 
     private static final int PERIOD_TIME = 500;
 
@@ -82,14 +81,27 @@ public class Shotter {
 //        mExecutor.execute(new ScreenShotTask());
     }
 
+    /**
+     * 停止截屏
+     */
     public void stopShotScreen() {
-        if (mExecutor == null) {
+        if (mExecutor != null) {
             mExecutor.shutdown();
         }
     }
 
+    /**
+     * 开始截屏
+     */
+    public void startShotScreen() {
+        if (mExecutor == null) {
+            mExecutor = new ScheduledThreadPoolExecutor(1);
+        }
+        mExecutor.execute(new ScreenShotTask());
+    }
+
     // 在后台线程里保存文件
-    Handler backgroundHandler;
+    private Handler backgroundHandler;
 
     private Handler getBackgroundHandler() {
         if (backgroundHandler == null) {
@@ -100,17 +112,6 @@ public class Shotter {
         }
 
         return backgroundHandler;
-    }
-
-    /**
-     * 开始截屏
-     */
-    public void startShotScreen() {
-        if (mExecutor == null) {
-            mExecutor = new ScheduledThreadPoolExecutor(1);
-        }
-
-        mExecutor.execute(new ScreenShotTask());
     }
 
     class ScreenShotTask implements Runnable {

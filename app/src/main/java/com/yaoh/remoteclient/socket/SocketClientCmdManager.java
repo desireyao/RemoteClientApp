@@ -74,6 +74,7 @@ public class SocketClientCmdManager extends SocketClientManager {
     }
 
     private void onActionWithCmd(byte cmd0, byte cmd1, byte cmdLen, byte[] data) {
+
         LogTool.LogE_DEBUG(TAG, "onActionWithCmd ="
                 + " cmd0 = " + cmd0
                 + " cmd1 = " + cmd1

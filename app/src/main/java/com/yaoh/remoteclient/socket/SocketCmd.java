@@ -27,6 +27,8 @@ public class SocketCmd {
         CMD_DEVICE_CONNECT,
         CMD_DEVICE_DISCONNECT,
         CMD_MOUSE_MOVE,
+        CMD_MOUSR_LEFT_DOWN,
+        CMD_MOUSR_LEFT_UP,
     }
 
 

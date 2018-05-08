@@ -55,7 +55,7 @@ public class SocketClientDataManager extends SocketClientManager {
      * 发送并刷新 差异的截图数据
      * @param diffData
      */
-    public void sendRefreshDiffData(byte[] diffData){
+    public synchronized void sendDiffData(byte[] diffData){
         sendData(diffData);
         sendData("*520\n");
     }

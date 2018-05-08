@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 
 import com.yaoh.remoteclient.listeners.ShotScreenBitmapListener;
 import com.yaoh.remoteclient.listeners.ShotScreenPicDiffListener;
-import com.yaoh.remoteclient.model.SliceModel;
 import com.yaoh.remoteclient.screenshot.PixelDiffManager;
 import com.yaoh.remoteclient.screenshot.ScreenShotActivity;
 import com.yaoh.remoteclient.screenshot.Shotter;
@@ -18,12 +17,11 @@ import com.yaoh.remoteclient.socket.SocketClientManager;
 import com.yaoh.remoteclient.socket.SocketCmd;
 import com.yaoh.remoteclient.socket.SocketListener;
 import com.yaoh.remoteclient.tools.LogTool;
+import com.yaoh.remoteclient.tools.MotionControl;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import java.util.List;
 
 /**
  * Created by yaoh on 2018/4/6.
@@ -32,11 +30,14 @@ import java.util.List;
 public class ScreenShotMainService extends Service implements ShotScreenBitmapListener, ShotScreenPicDiffListener {
 
     private static final String TAG = "ScreenShotMainService";
+
     private SocketClientCmdManager mSocketClientCmdManager;
     private SocketClientDataManager mSocketClientDataManager;
 
-    private PixelDiffManager pixelDiffManager;
+    private PixelDiffManager mDiffManager;
     private Shotter mShotter;
+
+    private MotionControl mControl;
 
     @Nullable
     @Override
@@ -48,16 +49,10 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     public void onCreate() {
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onCreate--->");
         EventBus.getDefault().register(this);
-
-        pixelDiffManager = new PixelDiffManager(this);
-
-        // 暂时先不连接 只测试截图
-        connectSocket();
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onDestroy ----->");
         EventBus.getDefault().unregister(this);
     }
@@ -65,6 +60,18 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onStartCommand--->");
+        if (mSocketClientDataManager == null
+                || mSocketClientDataManager.getStatus() == SocketClientManager.Status.STATUS_DISCONNECTED) {
+            if (mDiffManager == null) {
+                mDiffManager = new PixelDiffManager(this);
+            }
+
+            if (mControl == null) {
+                mControl = new MotionControl();
+            }
+
+            connectSocket();
+        }
         return START_STICKY;
     }
 
@@ -81,13 +88,17 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
      * 连接socket 指令通道 数据通道
      */
     private void connectSocket() {
-        mSocketClientCmdManager = new SocketClientCmdManager();
-        mSocketClientCmdManager.setSocketListener(new SocketCmdListener());
+        if (mSocketClientCmdManager == null) {
+            mSocketClientCmdManager = new SocketClientCmdManager();
+            mSocketClientCmdManager.setSocketListener(new SocketCmdListener());
+        }
         mSocketClientCmdManager.startConnect();
 
-        mSocketClientDataManager = new SocketClientDataManager();
-        mSocketClientDataManager.setSocketListener(new SocketDataListener());
-//        mSocketClientDataManager.setSendHeartData(true);
+        if (mSocketClientDataManager == null) {
+            mSocketClientDataManager = new SocketClientDataManager();
+            mSocketClientDataManager.setSocketListener(new SocketDataListener());
+        }
+//       mSocketClientDataManager.setSendHeartData(true);
         mSocketClientDataManager.startConnect();
     }
 
@@ -96,7 +107,7 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
         LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->");
 
         // 开始比较图片
-        pixelDiffManager.startDiffPicTask(bitmap);
+        mDiffManager.startDiffPicTask(bitmap);
     }
 
     @Override
@@ -115,7 +126,8 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 //            startScreenShot();
 //        }
 
-        mSocketClientDataManager.sendRefreshDiffData(diffData);
+        // 发送差异的图片数据
+        mSocketClientDataManager.sendDiffData(diffData);
 
         // 发送完数据开始截屏
 //        mShotter.startShotScreen();
@@ -129,11 +141,11 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShotScreenEvent(Intent data) {
-        LogTool.LogE_DEBUG(TAG, "onShotScreenEvent-----------> mShotter = " + (mShotter == null));
+        LogTool.LogE_DEBUG(TAG, "onShotScreenEvent-----------> [mShotter = NULL] : " + (mShotter == null));
         if (mShotter == null) {
             mShotter = new Shotter(data, this);
-            mShotter.startShotScreenTask();
         }
+        mShotter.startShotScreenTask();
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING)
@@ -150,15 +162,18 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
                 break;
             }
             case CMD_DEVICE_CONNECT: {
-                mSocketClientCmdManager.setStatus(SocketClientManager.Status.STATUS_SCREEN_SHOTTING);
-
-                // 开始截屏
+//                mSocketClientCmdManager.setStatus(SocketClientManager.Status.STATUS_SCREEN_SHOTTING);
+                //获取到桌面连接指令后 开始截屏
                 startScreenShot();
                 break;
             }
             case CMD_DEVICE_DISCONNECT: {
-                mSocketClientCmdManager.close();
-                mSocketClientDataManager.close();
+                if (mSocketClientCmdManager != null) {
+                    mSocketClientCmdManager.close();
+                }
+                if (mSocketClientDataManager != null) {
+                    mSocketClientDataManager.close();
+                }
                 break;
             }
             case CMD_MOUSE_MOVE: {
@@ -170,6 +185,8 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
                         + LogTool.LogBytes2Hex(data, "data")
                         + "\n x = " + x
                         + " y = " + y);
+
+                mControl.touch(x, y);
             }
         }
 
@@ -222,12 +239,14 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
         @Override
         public void onSocketDisconnected() {
             LogTool.LogE_DEBUG(TAG, "SocketDataListener--->socket断开");
+            if (mShotter != null) {
+                mShotter.stopShotScreen();
+            }
         }
 
         @Override
         public void onSocketResponse(byte[] recvData) {
-            LogTool.LogE_DEBUG(TAG, "SocketDataListener--->"
-                    + LogTool.LogBytes(recvData, "recvData"));
+            LogTool.LogE_DEBUG(TAG, "SocketDataListener--->" + LogTool.LogBytes(recvData, "recvData"));
         }
     }
 }

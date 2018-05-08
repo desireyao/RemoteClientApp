@@ -171,6 +171,7 @@ public abstract class SocketClientManager {
                     int rcvLen = inputStream.read(buffer);
                     if (rcvLen == -1) {
                         LogTool.LogD(TAG, " rcvLen ---> " + rcvLen);
+                        mSocket.close();
                         break;
                     }
 
@@ -178,7 +179,6 @@ public abstract class SocketClientManager {
                     System.arraycopy(buffer, 0, recvData, 0, rcvLen);
 //                  LogTool.LogE_DEBUG(TAG, LogTool.LogBytes(recvData, "recvData")
 //                            + "\n" + LogTool.LogBytes2Hex(recvData, "recvDataHex"));
-
                     if (mSocketListener != null) {
                         mSocketListener.onSocketResponse(recvData);
                     }

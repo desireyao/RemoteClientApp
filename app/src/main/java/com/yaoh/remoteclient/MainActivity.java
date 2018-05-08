@@ -13,9 +13,9 @@ import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.Permission;
 import com.yaoh.remoteclient.service.ScreenShotMainService;
-import com.yaoh.remoteclient.shell.ShellUtils;
 import com.yaoh.remoteclient.socket.SocketCmd;
 import com.yaoh.remoteclient.tools.LogTool;
+import com.yaoh.remoteclient.utils.ShellUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -27,7 +27,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
 
     private Button btn_socketConnect;
-    private Button btn_startScreenShot;
+    private Button btn_Test;
     private Button btn_closeConnect;
 
     private ScreenShotMainService mService;
@@ -71,16 +71,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void initUI() {
-        btn_startScreenShot = findViewById(R.id.btn_startScreenShot);
-        btn_startScreenShot.setOnClickListener(this);
+        btn_Test = findViewById(R.id.btn_Test);
+        btn_Test.setOnClickListener(this);
+//        tv_content = findViewById(R.id.tv_content);
+
         btn_socketConnect = findViewById(R.id.btn_socketConnect);
         btn_socketConnect.setOnClickListener(this);
-
         btn_closeConnect = findViewById(R.id.btn_closeConnect);
         btn_closeConnect.setOnClickListener(this);
-
-        tv_content = findViewById(R.id.tv_content);
-
     }
 
     @Override
@@ -92,19 +90,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.btn_startScreenShot) {
-//            EventBus.getDefault().post(0);
-
-            String path = "export CLASSPATH=/sdcard/Main.dex";
-            String app = "exec app_process /sdcard com.main.Main";
-
-            ShellUtils.execCommand(new String[]{path, app}, true);
-
-        } else if (id == R.id.btn_socketConnect) {
+        if (id == R.id.btn_socketConnect) {
             startService(new Intent(this, ScreenShotMainService.class));
             finish();
         } else if (id == R.id.btn_closeConnect) {
             EventBus.getDefault().post(new SocketCmd(SocketCmd.CMD_TYPE.CMD_DEVICE_DISCONNECT, null));
+        } else if (id == R.id.btn_Test) {
+            finish();
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+//                    ShellUtil.execShellCmd("input tap 507 770");
+                      ShellUtil.execShellCmd("input swipe 507 770 527 770");
+                }
+            }, 2000);
         }
     }
 

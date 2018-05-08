@@ -12,17 +12,16 @@ import static com.yaoh.remoteclient.Constants.BASE_DIR_PATH;
 
 public class App extends Application {
 
-    private static App app;
+    private static App mApp;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        app = this;
-
+        mApp = this;
         LogTool.init(BASE_DIR_PATH, 7, true);
     }
 
     public static App getApp() {
-        return app;
+        return mApp;
     }
 }
