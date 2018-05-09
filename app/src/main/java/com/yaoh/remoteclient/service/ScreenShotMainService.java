@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import com.yaoh.remoteclient.control.TouchControl;
 import com.yaoh.remoteclient.listeners.ShotScreenBitmapListener;
 import com.yaoh.remoteclient.listeners.ShotScreenPicDiffListener;
 import com.yaoh.remoteclient.screenshot.PixelDiffManager;
@@ -17,7 +18,6 @@ import com.yaoh.remoteclient.socket.SocketClientManager;
 import com.yaoh.remoteclient.socket.SocketCmd;
 import com.yaoh.remoteclient.socket.SocketListener;
 import com.yaoh.remoteclient.tools.LogTool;
-import com.yaoh.remoteclient.tools.MotionControl;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -37,7 +37,7 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     private PixelDiffManager mDiffManager;
     private Shotter mShotter;
 
-    private MotionControl mControl;
+    private TouchControl mControl;
 
     @Nullable
     @Override
@@ -60,6 +60,7 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         LogTool.LogE_DEBUG(TAG, "ScreenShotMainService onStartCommand--->");
+
         if (mSocketClientDataManager == null
                 || mSocketClientDataManager.getStatus() == SocketClientManager.Status.STATUS_DISCONNECTED) {
             if (mDiffManager == null) {
@@ -67,7 +68,7 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
             }
 
             if (mControl == null) {
-                mControl = new MotionControl();
+                mControl = new TouchControl();
             }
 
             connectSocket();
@@ -104,7 +105,7 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 
     @Override
     public void onShotScreenBitmap(Bitmap bitmap) {
-        LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->");
+//        LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->");
 
         // 开始比较图片
         mDiffManager.startDiffPicTask(bitmap);
@@ -177,16 +178,14 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
                 break;
             }
             case CMD_MOUSE_MOVE: {
-                byte[] data = socketCmd.getData();
-                int x = ((data[1] << 8) & 0xffff) | (data[0] & 0xff);
-                int y = ((data[3] << 8) & 0xffff) | (data[2] & 0xff);
-
-                LogTool.LogE_DEBUG(TAG, "CMD_MOUSE_MOVE --->"
-                        + LogTool.LogBytes2Hex(data, "data")
-                        + "\n x = " + x
-                        + " y = " + y);
-
-                mControl.touch(x, y);
+//                byte[] data = socketCmd.getData();
+//                int x = ((data[1] << 8) & 0xffff) | (data[0] & 0xff);
+//                int y = ((data[3] << 8) & 0xffff) | (data[2] & 0xff);
+//
+//                LogTool.LogE_DEBUG(TAG, "CMD_MOUSE_MOVE --->"
+//                        + LogTool.LogBytes2Hex(data, "data")
+//                        + "\n x = " + x
+//                        + " y = " + y);
             }
         }
 

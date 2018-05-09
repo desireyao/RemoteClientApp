@@ -169,9 +169,11 @@ public abstract class SocketClientManager {
 //                    LogTool.LogD(TAG, "run ---------------> START");
                     byte[] buffer = new byte[1024];
                     int rcvLen = inputStream.read(buffer);
+
                     if (rcvLen == -1) {
                         LogTool.LogD(TAG, " rcvLen ---> " + rcvLen);
-                        mSocket.close();
+                        mStatus = Status.STATUS_DISCONNECTED;
+                        mSocketListener.onSocketDisconnected();
                         break;
                     }
 

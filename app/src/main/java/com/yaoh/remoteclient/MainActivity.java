@@ -96,14 +96,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else if (id == R.id.btn_closeConnect) {
             EventBus.getDefault().post(new SocketCmd(SocketCmd.CMD_TYPE.CMD_DEVICE_DISCONNECT, null));
         } else if (id == R.id.btn_Test) {
-            finish();
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-//                    ShellUtil.execShellCmd("input tap 507 770");
-                      ShellUtil.execShellCmd("input swipe 507 770 527 770");
-                }
-            }, 2000);
+//            finish();
+//            mHandler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+////                      ShellUtil.execShellCmd("input tap 507 770");
+//                      ShellUtil.execShellCmd("input swipe 100 1501 110 1502 10");
+////                      ShellUtil.execShellCmd("input swipe 637 1502 664 1502");
+////                      ShellUtil.execShellCmd("input swipe 664 1503 697 1505");
+////                      ShellUtil.execShellCmd("input swipe 697 1505 723 1507");
+////                      ShellUtil.execShellCmd("input swipe 723 1507 745 1510");
+////                      ShellUtil.execShellCmd("input swipe 798 1517 819 1518");
+//                }
+//            }, 2000);
+              EventBus.getDefault().post(0);
         }
     }
 

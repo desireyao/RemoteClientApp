@@ -53,11 +53,26 @@ public class SocketClientDataManager extends SocketClientManager {
 
     /**
      * 发送并刷新 差异的截图数据
+     *
      * @param diffData
      */
-    public synchronized void sendDiffData(byte[] diffData){
+    public void sendDiffData(byte[] diffData) {
         sendData(diffData);
+
+        LogTool.LogE_DEBUG(TAG, " diffData.length = " + diffData.length);
         sendData("*520\n");
     }
+
+//    public synchronized void sendDiffData(byte[] diffData) {
+//        String refrshIamgeCmd = "*520\n";
+//        byte[] refreshImageCmdBytes = refrshIamgeCmd.getBytes();
+//        byte[] sendData = new byte[diffData.length + refreshImageCmdBytes.length];
+//
+//        System.arraycopy(diffData, 0, sendData, 0, diffData.length);
+//        System.arraycopy(refreshImageCmdBytes, 0, sendData, diffData.length,
+//                refreshImageCmdBytes.length);
+//        sendData(sendData);
+////        sendData("*520\n");
+//    }
 
 }

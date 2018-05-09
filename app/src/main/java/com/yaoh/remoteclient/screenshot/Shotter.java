@@ -37,7 +37,7 @@ public class Shotter {
 
     private ScheduledExecutorService mExecutor;
 
-    private static final int PERIOD_TIME = 500;
+    private static final int PERIOD_TIME = 250;
 
     public Shotter(Intent resultData, ShotScreenBitmapListener listener) {
         mListener = listener;
@@ -124,8 +124,8 @@ public class Shotter {
 //                    LogTool.LogE_DEBUG(TAG, "onImageAvailable--->");
 //                    acquireLatestImage();
 //                }
+//
 //            }, getBackgroundHandler());
-
             acquireLatestImage();
         }
     }
@@ -136,7 +136,7 @@ public class Shotter {
     private void acquireLatestImage() {
         Image image = mImageReader.acquireLatestImage();
         if (image == null) {
-            LogTool.LogE_DEBUG(TAG, "image == null");
+//            LogTool.LogE_DEBUG(TAG, "image == null");
             return;
         }
 
@@ -156,6 +156,9 @@ public class Shotter {
 //        if (mVirtualDisplay != null) {
 //            mVirtualDisplay.release();
 //        }
+
+//        LogTool.LogE_DEBUG(TAG, "acquireLatestImage---> width = " + bitmap.getWidth()
+//                + " height = " + bitmap.getHeight());
 
         if (mListener != null) {
             mListener.onShotScreenBitmap(bitmap);
