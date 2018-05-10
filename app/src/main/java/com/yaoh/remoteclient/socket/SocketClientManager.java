@@ -28,7 +28,6 @@ public abstract class SocketClientManager {
     public enum Status {
         STATUS_DISCONNECTED,
         STATUS_CONNECTED,
-        STATUS_SCREEN_SHOTTING
     }
 
     private Status mStatus = Status.STATUS_DISCONNECTED;

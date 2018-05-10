@@ -1,7 +1,6 @@
 package com.yaoh.remoteclient.screenshot;
 
 import android.graphics.Bitmap;
-import android.text.TextUtils;
 
 import com.yaoh.remoteclient.listeners.ShotScreenPicDiffListener;
 import com.yaoh.remoteclient.model.SliceModel;
@@ -10,11 +9,7 @@ import com.yaoh.remoteclient.utils.BitmapUtil;
 import com.yaoh.remoteclient.utils.ConvertUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -26,46 +21,33 @@ public class PixelDiffManager {
     private static final String TAG = "PixelDiffManager";
 
     // 上一帧图片的记录
-    private List<SliceModel> mSlicesLast = new ArrayList<>();
-    private List<SliceModel> mSlicesCur = new ArrayList<>();
+    private List<SliceModel> mSlicesLast = new ArrayList<SliceModel>();
+    private List<SliceModel> mSlicesCur = new ArrayList<SliceModel>();
 
-    // 返回有差异的图片
-    private List<SliceModel> mSlicesDiff = Collections.synchronizedList(new ArrayList<SliceModel>());
-    private List<Byte> mByteDiffDataList = Collections.synchronizedList(new ArrayList<Byte>());
+    private List<Byte> mByteDiffDataList = new ArrayList<Byte>();
 
     private ShotScreenPicDiffListener mListener;
 
     private String LOCK = "LOCK";
+    private String LOCK2 = "LOCK2";
 
     private int mDiffCount = 0;
 
+    private static final int mCorePoolSize = 8;
     private ScheduledExecutorService mExcutor;
-    private static final int mCorePoolSize = 1;
 
     public PixelDiffManager(ShotScreenPicDiffListener listener) {
         mListener = listener;
     }
 
     public void startDiffPicTask(Bitmap bitmap) {
-//        LogTool.LogE_DEBUG(TAG, "startDiffPicTask ------> time = " + System.currentTimeMillis());
+        LogTool.LogE_DEBUG(TAG, "startDiffPicTask ------> time = " + System.currentTimeMillis());
+
         if (mExcutor == null) {
             mExcutor = new ScheduledThreadPoolExecutor(mCorePoolSize);
         }
 
         mExcutor.execute(new Task(bitmap));
-    }
-
-    private byte[] slices2DiffData(List<SliceModel> slices) {
-
-        for (int i = 0; i < slices.size(); i++) {
-            addDiffData2Bytes(slices.get(i));
-        }
-
-        byte[] byteDiffData = new byte[mByteDiffDataList.size()];
-        for (int i = 0; i < mByteDiffDataList.size(); i++) {
-            byteDiffData[i] = mByteDiffDataList.get(i);
-        }
-        return byteDiffData;
     }
 
     class Task implements Runnable {
@@ -87,9 +69,8 @@ public class PixelDiffManager {
                 mListener.onShotScreenPicDiff(true, slices2DiffData(mSlicesLast));
                 return;
             }
-            mSlicesDiff.clear();
-            mSlicesCur = BitmapUtil.splitBitmap(mBitmap);
 
+            mSlicesCur = BitmapUtil.splitBitmap(mBitmap);
 //            LogTool.LogE_DEBUG(TAG, " mExcutor---> isShutdown = " + mExcutor.isShutdown()
 //                    + " TASK BEGIN222--->time = " + System.currentTimeMillis());
 
@@ -98,6 +79,20 @@ public class PixelDiffManager {
             }
         }
     }
+
+    private byte[] slices2DiffData(List<SliceModel> slices) {
+
+        for (int i = 0; i < slices.size(); i++) {
+            addDiffData2Bytes(slices.get(i));
+        }
+
+        byte[] byteDiffData = new byte[mByteDiffDataList.size()];
+        for (int i = 0; i < mByteDiffDataList.size(); i++) {
+            byteDiffData[i] = mByteDiffDataList.get(i);
+        }
+        return byteDiffData;
+    }
+
 
     /**
      * 多线程比较两张图片的不同
@@ -112,6 +107,7 @@ public class PixelDiffManager {
 
         @Override
         public void run() {
+
             Bitmap mPartBitmap1 = mSlicesLast.get(mIndex).getBitmap();
             Bitmap mPartBitmap2 = mSlicesCur.get(mIndex).getBitmap();
 
@@ -126,7 +122,6 @@ public class PixelDiffManager {
 
             for (int j = 0; j < pixels1.length; j++) {
                 if (pixels1[j] != pixels2[j]) {
-                    mSlicesDiff.add(mSlicesCur.get(mIndex));
                     addDiffData2Bytes(mSlicesCur.get(mIndex));
 //                  LogTool.LogE_DEBUG(TAG, "slicePic---> x = " + mSlicesCur.get(i).getX() + " y = " + mSlicesCur.get(i).getY());
                     break;
@@ -139,19 +134,21 @@ public class PixelDiffManager {
 
                 if (mDiffCount == mSlicesCur.size()) {    // 说明判断完所有的图片
                     mDiffCount = 0;
+
                     // 组成所有的图像数据一次发送
                     byte[] byteDiffData = new byte[mByteDiffDataList.size()];
                     for (int i = 0; i < mByteDiffDataList.size(); i++) {
                         byteDiffData[i] = mByteDiffDataList.get(i);
                     }
 
-//                    LogTool.LogE_DEBUG(TAG, "mDiffCount END 222 ---> " + mDiffCount
+//                  LogTool.LogE_DEBUG(TAG, "mDiffCount END 222 ---> " + mDiffCount
 //                            + " time = " + System.currentTimeMillis()
 //                            + " mSlicesDiff.SIZE = " + mSlicesDiff.size());
 
                     if (mListener != null) {
                         mListener.onShotScreenPicDiff(true, byteDiffData);
                         mSlicesLast = mSlicesCur;        // 将新的保存到上一帧
+                        LogTool.LogE_DEBUG(TAG, "startDiffPicTask END ------> time = " + System.currentTimeMillis());
                     }
                 }
             }
@@ -212,8 +209,10 @@ public class PixelDiffManager {
 //        LogTool.LogE_DEBUG(TAG, "X = " + slice.getX() + " Y = " + slice.getY()
 //                + " sendData--->" + sendData.length);
 
-        for (int j = 0; j < sendData.length; j++) {
-            mByteDiffDataList.add(sendData[j]);
+        synchronized (LOCK2) {
+            for (int j = 0; j < sendData.length; j++) {
+                mByteDiffDataList.add(sendData[j]);
+            }
         }
 
 //      LogTool.LogE_DEBUG(TAG, "sendScreenShotData333--->" + System.currentTimeMillis());

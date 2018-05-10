@@ -27,14 +27,13 @@ import org.greenrobot.eventbus.ThreadMode;
  * Created by yaoh on 2018/4/6.
  */
 
-public class ScreenShotMainService extends Service implements ShotScreenBitmapListener, ShotScreenPicDiffListener {
+public class ScreenShotMainService extends Service implements ShotScreenPicDiffListener {
 
     private static final String TAG = "ScreenShotMainService";
 
     private SocketClientCmdManager mSocketClientCmdManager;
     private SocketClientDataManager mSocketClientDataManager;
 
-    private PixelDiffManager mDiffManager;
     private Shotter mShotter;
 
     private TouchControl mControl;
@@ -63,9 +62,6 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
 
         if (mSocketClientDataManager == null
                 || mSocketClientDataManager.getStatus() == SocketClientManager.Status.STATUS_DISCONNECTED) {
-            if (mDiffManager == null) {
-                mDiffManager = new PixelDiffManager(this);
-            }
 
             if (mControl == null) {
                 mControl = new TouchControl();
@@ -104,14 +100,6 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     }
 
     @Override
-    public void onShotScreenBitmap(Bitmap bitmap) {
-//        LogTool.LogE_DEBUG(TAG, "onShotScreenBitmap--->");
-
-        // 开始比较图片
-        mDiffManager.startDiffPicTask(bitmap);
-    }
-
-    @Override
     public void onShotScreenPicDiff(boolean isSucceed, byte[] diffData) {
         // 获取差异的图片部分
 //        LogTool.LogE_DEBUG(TAG, "onShotScreenPicDiff ---> isSucceed = " + isSucceed
@@ -143,9 +131,11 @@ public class ScreenShotMainService extends Service implements ShotScreenBitmapLi
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onShotScreenEvent(Intent data) {
         LogTool.LogE_DEBUG(TAG, "onShotScreenEvent-----------> [mShotter = NULL] : " + (mShotter == null));
+
         if (mShotter == null) {
             mShotter = new Shotter(data, this);
         }
+
         mShotter.startShotScreenTask();
     }
 

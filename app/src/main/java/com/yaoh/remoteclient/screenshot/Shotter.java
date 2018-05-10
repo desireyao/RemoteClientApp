@@ -16,6 +16,7 @@ import android.os.HandlerThread;
 
 import com.yaoh.remoteclient.App;
 import com.yaoh.remoteclient.listeners.ShotScreenBitmapListener;
+import com.yaoh.remoteclient.listeners.ShotScreenPicDiffListener;
 import com.yaoh.remoteclient.tools.LogTool;
 import com.yaoh.remoteclient.utils.ScreenUtils;
 
@@ -30,16 +31,17 @@ import java.util.concurrent.TimeUnit;
 public class Shotter {
     private static final String TAG = "Shotter";
 
-    public ShotScreenBitmapListener mListener;
+    public ShotScreenPicDiffListener mListener;
 
     private ImageReader mImageReader;
     private MediaProjection mMediaProjection;
 
     private ScheduledExecutorService mExecutor;
+    private PixelDiffManager mDiffManager;
 
     private static final int PERIOD_TIME = 250;
 
-    public Shotter(Intent resultData, ShotScreenBitmapListener listener) {
+    public Shotter(Intent resultData, ShotScreenPicDiffListener listener) {
         mListener = listener;
 
         mMediaProjection = getMediaProjectionManager().getMediaProjection(Activity.RESULT_OK, resultData);
@@ -54,6 +56,8 @@ public class Shotter {
                 mImageReader.getSurface(),
                 null,
                 null);
+
+        mDiffManager = new PixelDiffManager(shotScreenPicDiffListener);
     }
 
     private MediaProjectionManager getMediaProjectionManager() {
@@ -77,8 +81,8 @@ public class Shotter {
         }
 
         mExecutor = new ScheduledThreadPoolExecutor(1);
-        mExecutor.scheduleAtFixedRate(new ScreenShotTask(), 0, PERIOD_TIME, TimeUnit.MILLISECONDS);
-//        mExecutor.execute(new ScreenShotTask());
+//        mExecutor.scheduleAtFixedRate(new ScreenShotTask(), 0, PERIOD_TIME, TimeUnit.MILLISECONDS);
+        mExecutor.execute(new ScreenShotTask());
     }
 
     /**
@@ -88,16 +92,6 @@ public class Shotter {
         if (mExecutor != null) {
             mExecutor.shutdown();
         }
-    }
-
-    /**
-     * 开始截屏
-     */
-    public void startShotScreen() {
-        if (mExecutor == null) {
-            mExecutor = new ScheduledThreadPoolExecutor(1);
-        }
-        mExecutor.execute(new ScreenShotTask());
     }
 
     // 在后台线程里保存文件
@@ -124,9 +118,9 @@ public class Shotter {
 //                    LogTool.LogE_DEBUG(TAG, "onImageAvailable--->");
 //                    acquireLatestImage();
 //                }
-//
 //            }, getBackgroundHandler());
-            acquireLatestImage();
+
+             acquireLatestImage();
         }
     }
 
@@ -135,8 +129,10 @@ public class Shotter {
      */
     private void acquireLatestImage() {
         Image image = mImageReader.acquireLatestImage();
+
         if (image == null) {
 //            LogTool.LogE_DEBUG(TAG, "image == null");
+            mExecutor.schedule(new ScreenShotTask(), 50, TimeUnit.MILLISECONDS);
             return;
         }
 
@@ -160,9 +156,24 @@ public class Shotter {
 //        LogTool.LogE_DEBUG(TAG, "acquireLatestImage---> width = " + bitmap.getWidth()
 //                + " height = " + bitmap.getHeight());
 
-        if (mListener != null) {
-            mListener.onShotScreenBitmap(bitmap);
-        }
+//        if (mListener != null) {
+//            mListener.onShotScreenBitmap(bitmap);
+//        }
+
+        mDiffManager.startDiffPicTask(bitmap);
     }
+
+    ShotScreenPicDiffListener shotScreenPicDiffListener = new ShotScreenPicDiffListener() {
+
+        @Override
+        public void onShotScreenPicDiff(boolean isSucceed, byte[] diffData) {
+
+            if (mListener != null && diffData.length != 0) {
+                mListener.onShotScreenPicDiff(isSucceed, diffData);
+            }
+
+            mExecutor.schedule(new ScreenShotTask(), 50, TimeUnit.MILLISECONDS);
+        }
+    };
 
 }
